@@ -127,7 +127,7 @@
 
                 @Override
                 public void onFailure(Call<User> call, Throwable t) {
-                    Log.d(TAG, "onFailure: " + t.getMessage());
+//                    Log.d(TAG, "onFailure: " + t.getMessage());
 
                     Toast.makeText(MainActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                 }
