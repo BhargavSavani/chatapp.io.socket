@@ -50,6 +50,7 @@ public class ChatActivity extends AppCompatActivity {
     private String token;
     private String currentUsername;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,6 +67,7 @@ public class ChatActivity extends AppCompatActivity {
         String name = getIntent().getStringExtra("name");
         String to = getIntent().getStringExtra("to");
 
+
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         token = preferences.getString("token", null); // Retrieve token from SharedPreferences
         currentUsername = preferences.getString("username", null);
@@ -74,7 +76,7 @@ public class ChatActivity extends AppCompatActivity {
         Log.d(TAG, "Current Username: " + currentUsername);
 
         usernameTextView.setText(name);
-        Picasso.get().load("http://192.168.1.9:8000/Assets/" + image).into(profileImageView);
+        Picasso.get().load("http://192.168.1.15:8000/Assets/" + image).into(profileImageView);
 
         ivBack.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -91,7 +93,7 @@ public class ChatActivity extends AppCompatActivity {
         fetchPreviousMessages(to);
 
         try {
-            mSocket = IO.socket("http://192.168.1.9:8000");
+            mSocket = IO.socket("http://192.168.1.15:8000");
             mSocket.connect();
             mSocket.on("message", onNewMessage);
         } catch (Exception e) {
@@ -114,7 +116,7 @@ public class ChatActivity extends AppCompatActivity {
     private void fetchPreviousMessages(String user) {
         AsyncTask.execute(() -> {
             try {
-                URL url = new URL("http://192.168.1.9:8000/messages?user=" + user);
+                URL url = new URL("http://192.168.1.15:8000/messages?user=" + user);
                 Log.d(TAG, "fetchPreviousMessages: " + user);
                 HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setRequestMethod("GET");
@@ -199,6 +201,7 @@ public class ChatActivity extends AppCompatActivity {
             });
         }
     };
+
 
     @Override
     protected void onDestroy() {

@@ -40,7 +40,8 @@ public class FriendsAdapter extends RecyclerView.Adapter<FriendsAdapter.FriendVi
     public void onBindViewHolder(@NonNull FriendViewHolder holder, int position) {
         Friend friend = friendsList.get(position);
         holder.usernameTextView.setText(friend.getUsername());
-        Picasso.get().load("http://192.168.1.9:8000/Assets/" + friend.getProfilePicture()).into(holder.profileImageView);
+        holder.lastMessageTextView.setText(friend.getLastMessage());
+        Picasso.get().load("http://192.168.1.15:8000/Assets/" + friend.getProfilePicture()).into(holder.profileImageView);
 
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -65,12 +66,11 @@ public class FriendsAdapter extends RecyclerView.Adapter<FriendsAdapter.FriendVi
         CircleImageView profileImageView;
         TextView lastMessageTextView;
 
-
         public FriendViewHolder(@NonNull View itemView) {
             super(itemView);
             usernameTextView = itemView.findViewById(R.id.usernameTextView);
             profileImageView = itemView.findViewById(R.id.profile_image);
-            lastMessageTextView = itemView.findViewById(R.id.tvMessage);
+            lastMessageTextView = itemView.findViewById(R.id.lastMessageTextView);
         }
     }
 }

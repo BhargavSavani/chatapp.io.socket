@@ -39,11 +39,11 @@
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/tvMessage"
-                android:layout_width="match_parent"
+                android:id="@+id/lastMessageTextView"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Message"
-                android:textSize="16sp" />
+                android:text="Last message"
+                android:textSize="14sp" />
 
         </LinearLayout>
 

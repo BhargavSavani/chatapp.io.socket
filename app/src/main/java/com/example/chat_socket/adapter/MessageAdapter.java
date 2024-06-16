@@ -1,8 +1,5 @@
 package com.example.chat_socket.adapter;
 
-import static android.content.ContentValues.TAG;
-
-import android.content.SharedPreferences;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,7 +17,6 @@ import java.util.List;
 public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageViewHolder> {
 
     private static final String TAG = "MessageAdapter";
-
 
     private List<Message> messageList;
     private String currentUsername;
@@ -60,7 +56,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
     @Override
     public void onBindViewHolder(@NonNull MessageViewHolder holder, int position) {
         Message message = messageList.get(position);
-        holder.messageTextView.setText(message.getText());
+        holder.messageTextView.setText(message.getMessage());
     }
 
     @Override

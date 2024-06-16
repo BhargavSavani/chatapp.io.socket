@@ -30,7 +30,6 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class LoginActivity extends AppCompatActivity {
-
     private EditText userInputField;
     private EditText passwordField;
     private Button loginButton;
@@ -48,7 +47,6 @@ public class LoginActivity extends AppCompatActivity {
             finish();
             return;
         }
-
 
         userInputField = findViewById(R.id.edtEmail);
         passwordField = findViewById(R.id.edtPassword);
@@ -71,7 +69,7 @@ public class LoginActivity extends AppCompatActivity {
     private void performLogin(String userInput, String password) {
         OkHttpClient client = new OkHttpClient();
 
-        String url = "http://192.168.1.9:8000/login";
+        String url = "http://192.168.1.15:8000/login";
         RequestBody formBody = new FormBody.Builder()
                 .add("userInput", userInput)
                 .add("password", password)
@@ -113,7 +111,6 @@ public class LoginActivity extends AppCompatActivity {
                         editor.apply();
 
                         Log.d(TAG, "Stored Username: " + preferences.getString("username", "null"));
-
 
                         runOnUiThread(() -> {
                             Toast.makeText(LoginActivity.this, message, Toast.LENGTH_LONG).show();

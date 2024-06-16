@@ -3,27 +3,28 @@ package com.example.chat_socket.model;
 import java.util.List;
 
 public class User {
-    private String _id;
-    private String username;
+
     private String profilePicture;
     private List<Friend> friends;
 
-    // Getters and Setters
-    public String getId() {
-        return _id;
+    public User(List<Friend> friends) {
+        this.friends = friends;
     }
 
-    public void setId(String _id) {
-        this._id = _id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
+//    public String getUserId() {
+//        return userId;
+//    }
+//
+//    public void setUserId(String userId) {
+//        this.userId = userId;
+//    }
+//    public String getUsername() {
+//        return username;
+//    }
+//
+//    public void setUsername(String username) {
+//        this.username = username;
+//    }
 
     public String getProfilePicture() {
         return profilePicture;
@@ -39,5 +40,11 @@ public class User {
 
     public void setFriends(List<Friend> friends) {
         this.friends = friends;
+    }
+
+    @Override
+    public String toString() {
+        return "User{friends=" + friends +
+                '}';
     }
 }
