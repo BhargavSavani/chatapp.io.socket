@@ -2,4 +2,9 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="colorPrimary">#0D8375</color>
+    <color name="colorPrimaryDark">#004D40</color>
+    <color name="colorAccent">#25D366</color>
+    <color name="whatsapp_background_start">#075E54</color>
+    <color name="whatsapp_background_end">#25D366</color>
 </resources>

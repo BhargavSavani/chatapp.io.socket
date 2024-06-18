@@ -48,8 +48,7 @@ public class ChatActivity extends AppCompatActivity {
     private ImageView btnSend;
     private Socket mSocket;
     private String token;
-    private String currentUsername;
-
+    private String userId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,48 +66,32 @@ public class ChatActivity extends AppCompatActivity {
         String name = getIntent().getStringExtra("name");
         String to = getIntent().getStringExtra("to");
 
-
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        token = preferences.getString("token", null); // Retrieve token from SharedPreferences
-        currentUsername = preferences.getString("username", null);
+        token = preferences.getString("token", null);
+        userId = preferences.getString("userId", null);
 
-
-        Log.d(TAG, "Current Username: " + currentUsername);
+        Log.d(TAG, "Current Username: " + userId);
 
         usernameTextView.setText(name);
-        Picasso.get().load("http://192.168.1.15:8000/Assets/" + image).into(profileImageView);
+        Picasso.get().load("http://192.168.1.8:8000/Assets/" + image).into(profileImageView);
 
-        ivBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
+        ivBack.setOnClickListener(v -> finish());
 
         messageList = new ArrayList<>();
-        messageAdapter = new MessageAdapter(messageList, currentUsername);
+        messageAdapter = new MessageAdapter(messageList, userId);
         chatRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         chatRecyclerView.setAdapter(messageAdapter);
 
         fetchPreviousMessages(to);
 
-        try {
-            mSocket = IO.socket("http://192.168.1.15:8000");
-            mSocket.connect();
-            mSocket.on("message", onNewMessage);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        mSocket = SocketManager.getSocket();
 
-        btnSend.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String messageText = edtMessage.getText().toString().trim();
-                if (!messageText.isEmpty()) {
-                    edtMessage.setText("");
-                    sendMessage(to, messageText, token);
-                    chatRecyclerView.smoothScrollToPosition(messageList.size() - 1);
-                }
+        btnSend.setOnClickListener(v -> {
+            String messageText = edtMessage.getText().toString().trim();
+            if (!messageText.isEmpty()) {
+                edtMessage.setText("");
+                sendMessage(to, messageText, token);
+                chatRecyclerView.smoothScrollToPosition(messageList.size() - 1);
             }
         });
     }
@@ -116,7 +99,7 @@ public class ChatActivity extends AppCompatActivity {
     private void fetchPreviousMessages(String user) {
         AsyncTask.execute(() -> {
             try {
-                URL url = new URL("http://192.168.1.15:8000/messages?user=" + user);
+                URL url = new URL("http://192.168.1.8:8000/messages?user=" + user);
                 Log.d(TAG, "fetchPreviousMessages: " + user);
                 HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setRequestMethod("GET");
@@ -139,9 +122,9 @@ public class ChatActivity extends AppCompatActivity {
                     for (int i = 0; i < messagesArray.length(); i++) {
                         JSONObject messageObject = messagesArray.getJSONObject(i);
                         String messageText = messageObject.getString("message");
-                        String username = messageObject.getString("username");
-                        Log.d(TAG, "fetchPreviousMessages: " + username);
-                        Message message = new Message(username, messageText);
+                        String senderId = messageObject.getString("senderId");
+                        Log.d(TAG, "fetchPreviousMessages: " + senderId);
+                        Message message = new Message(senderId, messageText);
                         fetchedMessages.add(message);
                     }
 
@@ -152,35 +135,31 @@ public class ChatActivity extends AppCompatActivity {
                         chatRecyclerView.scrollToPosition(messageList.size() - 1);
                     });
                 } else {
-                    runOnUiThread(() -> {
-                        Toast.makeText(ChatActivity.this, "Failed to load previous messages", Toast.LENGTH_LONG).show();
-                    });
+                    runOnUiThread(() -> Toast.makeText(ChatActivity.this, "Failed to load previous messages", Toast.LENGTH_LONG).show());
                 }
             } catch (Exception e) {
                 e.printStackTrace();
                 Log.e(TAG, "Error fetching previous messages", e);
-                runOnUiThread(() -> {
-                    Toast.makeText(ChatActivity.this, "Error loading previous messages", Toast.LENGTH_LONG).show();
-                });
+                runOnUiThread(() -> Toast.makeText(ChatActivity.this, "Error loading previous messages", Toast.LENGTH_LONG).show());
             }
         });
     }
 
     private void sendMessage(String to, String messageText, String token) {
-        Message message = new Message(currentUsername, messageText);
+        Message message = new Message(userId, messageText);
         messageAdapter.addMessage(message);
 
         JSONObject messageObject = new JSONObject();
         try {
-            messageObject.put("to", to); // Include 'to' in the JSON object
-            messageObject.put("message", messageText); // Include 'message' in the JSON object
-            messageObject.put("token", token); // Include 'token' in the JSON object
-            messageObject.put("username", currentUsername);// Include 'username' in the JSON object
+            messageObject.put("to", to);
+            messageObject.put("message", messageText);
+            messageObject.put("token", token);
+            messageObject.put("from", userId);
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
-        mSocket.emit("message", messageObject); // Emit the message JSON object
+        mSocket.emit("message", messageObject);
     }
 
     private Emitter.Listener onNewMessage = new Emitter.Listener() {
@@ -190,8 +169,8 @@ public class ChatActivity extends AppCompatActivity {
                 try {
                     JSONObject data = (JSONObject) args[0];
                     String messageText = data.getString("message");
-                    String username = data.getString("username");
-                    Message message = new Message(username, messageText);
+                    String senderId = data.getString("userId");
+                    Message message = new Message(senderId, messageText);
                     messageAdapter.addMessage(message);
                     chatRecyclerView.scrollToPosition(messageList.size() - 1);
                 } catch (JSONException e) {
@@ -201,14 +180,4 @@ public class ChatActivity extends AppCompatActivity {
             });
         }
     };
-
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (mSocket != null) {
-            mSocket.disconnect();
-            mSocket.off("message", onNewMessage);
-        }
-    }
 }

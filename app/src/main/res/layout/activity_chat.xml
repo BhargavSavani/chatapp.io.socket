@@ -11,7 +11,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#25D366"
+        android:background="#0A7C69"
         android:orientation="horizontal"
         android:padding="11dp">
 
@@ -93,9 +93,9 @@
 
         <ImageView
             android:id="@+id/btnSend"
-            android:layout_width="43dp"
-            android:layout_height="43dp"
-            android:background="#25D366"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:background="#0A7C69"
             android:padding="10dp"
             android:src="@drawable/paper_plane"
             app:tint="@color/white" />

@@ -19,19 +19,19 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
     private static final String TAG = "MessageAdapter";
 
     private List<Message> messageList;
-    private String currentUsername;
+    private String userId;
 
-    public MessageAdapter(List<Message> messageList, String currentUsername) {
+    public MessageAdapter(List<Message> messageList, String userId) {
         this.messageList = messageList;
-        this.currentUsername = currentUsername;
+        this.userId = userId;
     }
 
     @Override
     public int getItemViewType(int position) {
         Message message = messageList.get(position);
-        Log.d("MessageAdapter", "Message Username: " + message.getUsername());
-        Log.d("MessageAdapter", "Current Username: " + currentUsername);
-        if (message.getUsername().equals(currentUsername)) {
+        Log.d("MessageAdapter", "Message Username: " + message.getSenderId());
+        Log.d("MessageAdapter", "Current Username: " + userId);
+        if (message.getSenderId().equals(userId)) {
             return 1;
         } else {
             return 0;

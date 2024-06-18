@@ -2,19 +2,18 @@ package com.example.chat_socket.model;
 
 public class Message {
     private String senderId;
-    private String username;
+    private String receiverId;
     private String messageId;
     private String message;
-    private String timestamp;
+    private String time;
 
     public Message() {
     }
 
-    public Message(String username, String message) {
-        this.username = username;
+    public Message(String senderId,String message) {
+        this.senderId = senderId;
         this.message = message;
     }
-
 
     public String getSenderId() {
         return senderId;
@@ -24,12 +23,12 @@ public class Message {
         this.senderId = senderId;
     }
 
-    public String getUsername() {
-        return username;
+    public String getReceiverId() {
+        return receiverId;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setReceiverId(String receiverId) {
+        this.receiverId = receiverId;
     }
 
     public String getMessageId() {
@@ -48,23 +47,22 @@ public class Message {
         this.message = message;
     }
 
-    public String getTimestamp() {
-        return timestamp;
+    public String getTime() {
+        return time;
     }
 
-    public void setTimestamp(String timestamp) {
-        this.timestamp = timestamp;
+    public void setTime(String time) {
+        this.time = time;
     }
 
     @Override
     public String toString() {
         return "Message{" +
                 "senderId='" + senderId + '\'' +
-                ", senderUsername='" + username + '\'' +
+                "receiverId='" + receiverId + '\'' +
                 ", messageId='" + messageId + '\'' +
                 ", message='" + message + '\'' +
-                ", timestamp='" + timestamp + '\'' +
+                ", time='" + time + '\'' +
                 '}';
     }
-
 }

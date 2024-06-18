@@ -39,17 +39,17 @@ public class FriendsAdapter extends RecyclerView.Adapter<FriendsAdapter.FriendVi
     @Override
     public void onBindViewHolder(@NonNull FriendViewHolder holder, int position) {
         Friend friend = friendsList.get(position);
-        holder.usernameTextView.setText(friend.getUsername());
+        holder.tvFullName.setText(friend.getFirstName() + " " + friend.getLastName());
         holder.lastMessageTextView.setText(friend.getLastMessage());
-        Picasso.get().load("http://192.168.1.15:8000/Assets/" + friend.getProfilePicture()).into(holder.profileImageView);
+        Picasso.get().load("http://192.168.1.8:8000/Assets/" + friend.getProfilePicture()).into(holder.profileImageView);
 
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(context, ChatActivity.class);
                 intent.putExtra("image", friend.getProfilePicture());
-                intent.putExtra("name", friend.getUsername());
-                intent.putExtra("to",friend.getUsername());
+                intent.putExtra("name", friend.getFirstName() + " " + friend.getLastName());
+                intent.putExtra("to",friend.get_id());
                 context.startActivity(intent);
             }
         });
@@ -62,13 +62,13 @@ public class FriendsAdapter extends RecyclerView.Adapter<FriendsAdapter.FriendVi
 
 
     public static class FriendViewHolder extends RecyclerView.ViewHolder {
-        TextView usernameTextView;
+        TextView tvFullName;
         CircleImageView profileImageView;
         TextView lastMessageTextView;
 
         public FriendViewHolder(@NonNull View itemView) {
             super(itemView);
-            usernameTextView = itemView.findViewById(R.id.usernameTextView);
+            tvFullName = itemView.findViewById(R.id.tvFullName);
             profileImageView = itemView.findViewById(R.id.profile_image);
             lastMessageTextView = itemView.findViewById(R.id.lastMessageTextView);
         }

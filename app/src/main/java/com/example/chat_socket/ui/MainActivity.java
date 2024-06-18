@@ -49,7 +49,6 @@ public class MainActivity extends AppCompatActivity {
 
     private Retrofit retrofit;
     private ApiService apiService;
-    private BroadcastReceiver lastMessageReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +63,11 @@ public class MainActivity extends AppCompatActivity {
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         String token = preferences.getString("token", null);
+        String username = preferences.getString("username", null);
+
+        Log.d(TAG, "onCreate: " + token);
+        Log.d(TAG, "onCreate: " + username);
+
 
         if (token == null) {
             Intent intent = new Intent(MainActivity.this, LoginActivity.class);
@@ -74,37 +78,19 @@ public class MainActivity extends AppCompatActivity {
 
         // Initialize Retrofit
         retrofit = new Retrofit.Builder()
-                .baseUrl("http://192.168.1.15:8000")
+                .baseUrl("http://192.168.1.8:8000")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
         apiService = retrofit.create(ApiService.class);
 
         getUserDetails(token);
-        lastMessageReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                if (intent != null && "UPDATE_LAST_MESSAGE".equals(intent.getAction())) {
-                    String friendId = intent.getStringExtra("to");
-                    String messageText = intent.getStringExtra("message");
-                    updateLastMessageInList(friendId, messageText);
-                }
-            }
-        };
 
-        IntentFilter filter = new IntentFilter("UPDATE_LAST_MESSAGE");
-        registerReceiver(lastMessageReceiver, filter);
+        SocketManager.initializeSocket(token);
+        mSocket = SocketManager.getSocket();
 
-        try {
-            IO.Options options = IO.Options.builder()
-                    .setQuery("token=" + token)
-                    .build();
-            mSocket = IO.socket("http://192.168.1.15:8000", options);
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
-
-        mSocket.on(Socket.EVENT_CONNECT, args -> runOnUiThread(() -> Toast.makeText(MainActivity.this, "Connected", Toast.LENGTH_SHORT).show()))
+        mSocket.on(Socket.EVENT_CONNECT, args -> runOnUiThread(() -> Toast.makeText(MainActivity.this, "Connected", Toast.LENGTH_SHORT).show()));
+        mSocket.emit("register", username)
                 .on("new message", args -> {
                     try {
                         JSONObject data = (JSONObject) args[0];
@@ -126,6 +112,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void getUserDetails(String token) {
         Call<User> call = apiService.getUserDetails(token);
+        Log.d(TAG, "getUserDetails: " + token);
         call.enqueue(new Callback<User>() {
             @Override
             public void onResponse(Call<User> call, Response<User> response) {
@@ -163,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.d(TAG, "onResponse: " + lastMessages);
                     for (Message lastMessage : lastMessages) {
                         for (Friend friend : friendsList) {
-                            if (friend.getUserId().equals(lastMessage.getSenderId())) {
+                            if (friend.get_id().equals(lastMessage.getSenderId())) {
                                 friend.setLastMessage(lastMessage.getMessage());
                                 break;
                             }
@@ -187,22 +174,12 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    // Method to update last message received in the list
-    private void updateLastMessageInList(String username, String messageText) {
-        for (Friend friend : friendsList) {
-            if (friend.getUsername().equals(username)) {
-                friend.setLastMessage(messageText);
-                friendsAdapter.notifyDataSetChanged();
-                break;
-            }
-        }
-    }
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mSocket.disconnect();
-        unregisterReceiver(lastMessageReceiver);
+        if (mSocket != null) {
+            mSocket.disconnect();
+        }
     }
 }
 
