@@ -1,4 +1,4 @@
-package com.example.chat_socket.ui;
+package com.example.chat_socket.service;
 
 import java.net.URISyntaxException;
 

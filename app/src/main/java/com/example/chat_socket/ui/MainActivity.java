@@ -1,36 +1,36 @@
 package com.example.chat_socket.ui;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.PopupMenu;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.chat_socket.adapter.FriendsAdapter;
 import com.example.chat_socket.R;
+import com.example.chat_socket.adapter.FriendsAdapter;
 import com.example.chat_socket.model.Friend;
-import com.example.chat_socket.model.Message;
-import com.example.chat_socket.model.MessageResponse;
 import com.example.chat_socket.model.User;
 import com.example.chat_socket.service.ApiService;
+import com.example.chat_socket.service.SocketManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.socket.client.IO;
 import io.socket.client.Socket;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -55,6 +55,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
         friendsRecyclerView = findViewById(R.id.friendsRecyclerView);
 
         friendsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -67,7 +70,6 @@ public class MainActivity extends AppCompatActivity {
 
         Log.d(TAG, "onCreate: " + token);
         Log.d(TAG, "onCreate: " + username);
-
 
         if (token == null) {
             Intent intent = new Intent(MainActivity.this, LoginActivity.class);
@@ -109,6 +111,51 @@ public class MainActivity extends AppCompatActivity {
         mSocket.connect();
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.option_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.ivMenu) {
+            View view = findViewById(R.id.ivMenu);
+            showPopupMenu(view);
+            return true;
+        } else {
+            return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private void showPopupMenu(View view) {
+        PopupMenu popupMenu = new PopupMenu(this, view);
+        popupMenu.getMenuInflater().inflate(R.menu.popup_menu, popupMenu.getMenu());
+        popupMenu.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.menu_settings) {
+                startActivity(new Intent(MainActivity.this, ProfileActivity.class));
+                return true;
+            } else if (item.getItemId() == R.id.menu_logout) {
+                logout();
+                return true;
+            } else {
+                return false;
+            }
+        });
+        popupMenu.show();
+    }
+
+    private void logout() {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.remove("token");
+        editor.apply();
+
+        Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+        startActivity(intent);
+        finish();
+    }
 
     private void getUserDetails(String token) {
         Call<User> call = apiService.getUserDetails(token);
@@ -122,8 +169,6 @@ public class MainActivity extends AppCompatActivity {
                     friendsList.clear();
                     friendsList.addAll(user.getFriends());
 
-                    updateLastMessagesForFriends(token);
-
                     friendsAdapter.notifyDataSetChanged();
 
                 } else {
@@ -136,40 +181,6 @@ public class MainActivity extends AppCompatActivity {
             public void onFailure(Call<User> call, Throwable t) {
                 Log.d(TAG, "onFailure: " + t.getMessage());
                 Toast.makeText(MainActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    private void updateLastMessagesForFriends(String token) {
-        Call<MessageResponse> call = apiService.getLastMessages(token);
-        call.enqueue(new Callback<MessageResponse>() {
-            @Override
-            public void onResponse(Call<MessageResponse> call, Response<MessageResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    List<Message> lastMessages = response.body().getLastMessage();
-                    Log.d(TAG, "onResponse: " + lastMessages);
-                    for (Message lastMessage : lastMessages) {
-                        for (Friend friend : friendsList) {
-                            if (friend.get_id().equals(lastMessage.getSenderId())) {
-                                friend.setLastMessage(lastMessage.getMessage());
-                                break;
-                            }
-                        }
-                    }
-                    friendsAdapter.notifyDataSetChanged();
-                } else {
-                    Log.d(TAG, "Failed to get last messages for friends: " + response.message());
-                    try {
-                        Log.d(TAG, "Response error body: " + response.errorBody().string());
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(Call<MessageResponse> call, Throwable t) {
-                Log.e(TAG, "Failed to fetch last messages for friends: " + t.getMessage(), t);
             }
         });
     }

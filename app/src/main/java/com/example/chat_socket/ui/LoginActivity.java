@@ -51,7 +51,6 @@ public class LoginActivity extends AppCompatActivity {
             finish();
         }
 
-
         loginButton.setOnClickListener(v -> {
             String email = edtEmail.getText().toString().trim();
             String password = edtPassword.getText().toString().trim();
@@ -77,7 +76,7 @@ public class LoginActivity extends AppCompatActivity {
                 .build();
 
         Request request = new Request.Builder()
-                .url("http://192.168.1.8:8000/login")  // Replace with your API URL
+                .url("http://192.168.1.8:8000/login")
                 .post(formBody)
                 .build();
 

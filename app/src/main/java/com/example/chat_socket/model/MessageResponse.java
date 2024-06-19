@@ -3,13 +3,13 @@ package com.example.chat_socket.model;
 import java.util.List;
 
 public class MessageResponse {
-    private List<Message> lastMessage;
+    private Message message;
 
-    public List<Message> getLastMessage() {
-        return lastMessage;
+    public Message getMessage() {
+        return message;
     }
 
-    public void setLastMessage(List<Message> lastMessage) {
-        this.lastMessage = lastMessage;
+    public void setMessage(Message message) {
+        this.message = message;
     }
 }

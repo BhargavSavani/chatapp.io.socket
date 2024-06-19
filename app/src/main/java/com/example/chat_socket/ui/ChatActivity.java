@@ -6,13 +6,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
-import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -21,6 +19,9 @@ import android.widget.Toast;
 import com.example.chat_socket.R;
 import com.example.chat_socket.adapter.MessageAdapter;
 import com.example.chat_socket.model.Message;
+import com.example.chat_socket.model.MessageResponse;
+import com.example.chat_socket.service.ApiService;
+import com.example.chat_socket.service.SocketManager;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
@@ -35,9 +36,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.hdodenhof.circleimageview.CircleImageView;
-import io.socket.client.IO;
 import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ChatActivity extends AppCompatActivity {
 
@@ -49,6 +54,7 @@ public class ChatActivity extends AppCompatActivity {
     private Socket mSocket;
     private String token;
     private String userId;
+    private ApiService apiService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,7 +81,7 @@ public class ChatActivity extends AppCompatActivity {
         usernameTextView.setText(name);
         Picasso.get().load("http://192.168.1.8:8000/Assets/" + image).into(profileImageView);
 
-        ivBack.setOnClickListener(v -> finish());
+        ivBack.setOnClickListener(v -> fetchLastMessageAndFinish(to));
 
         messageList = new ArrayList<>();
         messageAdapter = new MessageAdapter(messageList, userId);
@@ -92,6 +98,39 @@ public class ChatActivity extends AppCompatActivity {
                 edtMessage.setText("");
                 sendMessage(to, messageText, token);
                 chatRecyclerView.smoothScrollToPosition(messageList.size() - 1);
+            }
+        });
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("http://192.168.1.8:8000/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        apiService = retrofit.create(ApiService.class);
+    }
+
+
+    private void fetchLastMessageAndFinish(String username) {
+        Call<MessageResponse> call = apiService.getLastMessage(token, username);
+        call.enqueue(new Callback<MessageResponse>() {
+            @Override
+            public void onResponse(Call<MessageResponse> call, Response<MessageResponse> response) {
+                if (response.isSuccessful()) {
+                    MessageResponse messageResponse = response.body();
+                    if (messageResponse != null) {
+                        Message lastMessage = messageResponse.getMessage();
+                        Toast.makeText(ChatActivity.this, "Last Message: " + lastMessage.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(ChatActivity.this, "Failed to fetch last message", Toast.LENGTH_LONG).show();
+                }
+                finish();
+            }
+
+            @Override
+            public void onFailure(Call<MessageResponse> call, Throwable t) {
+                Toast.makeText(ChatActivity.this, "Error fetching last message", Toast.LENGTH_LONG).show();
+                finish();
             }
         });
     }
