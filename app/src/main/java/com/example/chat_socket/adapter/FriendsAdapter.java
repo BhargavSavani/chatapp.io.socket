@@ -47,7 +47,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<FriendsAdapter.FriendVi
 
         if (friend.getLastMessage() != null) {
             holder.lastMessageTextView.setText(friend.getLastMessage());
-           // holder.lastMessageTimeTextView.setText(formatDate(friend.getLastMessageTime()));
+            holder.lastMessageTimeTextView.setText((friend.getLastMessageTime()));
         } else {
             holder.lastMessageTextView.setText("No messages yet");
             holder.lastMessageTimeTextView.setText("");
@@ -89,13 +89,5 @@ public class FriendsAdapter extends RecyclerView.Adapter<FriendsAdapter.FriendVi
             lastMessageTextView = itemView.findViewById(R.id.lastMessageTextView);
             lastMessageTimeTextView = itemView.findViewById(R.id.lastMessageTimeTextView);
         }
-    }
-
-    private String formatDate(Date date) {
-        if (date == null) {
-            return "";
-        }
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-        return sdf.format(date);
     }
 }

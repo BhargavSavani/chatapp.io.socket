@@ -121,6 +121,61 @@ public class MainActivity extends AppCompatActivity {
         mSocket.connect();
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.option_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.ivMenu) {
+            View view = findViewById(R.id.ivMenu);
+            showPopupMenu(view);
+            return true;
+        } else {
+            return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private void showPopupMenu(View view) {
+        PopupMenu popupMenu = new PopupMenu(this, view);
+        popupMenu.getMenuInflater().inflate(R.menu.popup_menu, popupMenu.getMenu());
+        popupMenu.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.menu_settings) {
+                startActivity(new Intent(MainActivity.this, ProfileActivity.class));
+                return true;
+            } else if (item.getItemId() == R.id.menu_logout) {
+                showLogoutConfirmationDialog();
+                return true;
+            } else {
+                return false;
+            }
+        });
+        popupMenu.show();
+    }
+
+    private void showLogoutConfirmationDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Logout");
+        builder.setMessage("Are you sure you want to logout?");
+        builder.setPositiveButton("Yes", (dialog, which) -> {
+            logout();
+        });
+        builder.setNegativeButton("No", (dialog, which) -> {
+            dialog.dismiss();
+        });
+        builder.show();
+    }
+
+    private void logout() {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        preferences.edit().clear().apply();
+        startActivity(new Intent(MainActivity.this, LoginActivity.class));
+        finish();
+    }
+
     private void sendUsernameToServer(String username) {
         JSONObject registerObject = new JSONObject();
         try {
