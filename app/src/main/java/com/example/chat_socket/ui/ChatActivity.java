@@ -20,8 +20,8 @@ import com.example.chat_socket.R;
 import com.example.chat_socket.adapter.MessageAdapter;
 import com.example.chat_socket.model.Message;
 import com.example.chat_socket.model.MessageResponse;
+import com.example.chat_socket.model.SocketManager;
 import com.example.chat_socket.service.ApiService;
-import com.example.chat_socket.service.SocketManager;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
@@ -79,7 +79,7 @@ public class ChatActivity extends AppCompatActivity {
         Log.d(TAG, "Current Username: " + userId);
 
         usernameTextView.setText(name);
-        Picasso.get().load("http://192.168.1.8:8000/Assets/" + image).into(profileImageView);
+        Picasso.get().load("http://192.168.1.7:8000/Assets/" + image).into(profileImageView);
 
         ivBack.setOnClickListener(v -> fetchLastMessageAndFinish(to));
 
@@ -102,7 +102,7 @@ public class ChatActivity extends AppCompatActivity {
         });
 
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://192.168.1.8:8000/")
+                .baseUrl("http://192.168.1.7:8000/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
@@ -138,7 +138,7 @@ public class ChatActivity extends AppCompatActivity {
     private void fetchPreviousMessages(String user) {
         AsyncTask.execute(() -> {
             try {
-                URL url = new URL("http://192.168.1.8:8000/messages?user=" + user);
+                URL url = new URL("http://192.168.1.7:8000/messages?user=" + user);
                 Log.d(TAG, "fetchPreviousMessages: " + user);
                 HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setRequestMethod("GET");

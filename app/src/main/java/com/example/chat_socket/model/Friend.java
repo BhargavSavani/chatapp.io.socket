@@ -1,68 +1,62 @@
 package com.example.chat_socket.model;
 
 public class Friend {
-
     private String _id;
+    private String username;
     private String firstName;
     private String lastName;
     private String profilePicture;
     private String lastMessage;
+    private String lastMessageTime;
 
-    public Friend(String _id, String firstName, String lastName, String profilePicture, String lastMessage) {
+    public Friend(String _id, String username, String firstName, String lastName, String profilePicture, String lastMessage, String lastMessageTime) {
         this._id = _id;
+        this.username = username;
         this.firstName = firstName;
         this.lastName = lastName;
         this.profilePicture = profilePicture;
         this.lastMessage = lastMessage;
+        this.lastMessageTime = lastMessageTime;
     }
 
-    public String getLastMessage() {
-        return lastMessage;
-    }
-
-    public void setLastMessage(String lastMessage) {
-        this.lastMessage = lastMessage;
-    }
-
-    public String get_id() {
+    public String getId() {
         return _id;
     }
 
-    public void set_id(String _id) {
-        this._id = _id;
+    public String getUsername() {
+        return username;
     }
 
     public String getFirstName() {
         return firstName;
     }
 
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
     public String getLastName() {
         return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
     }
 
     public String getProfilePicture() {
         return profilePicture;
     }
 
-    public void setProfilePicture(String profilePicture) {
-        this.profilePicture = profilePicture;
+    public String getLastMessage() {
+        return lastMessage;
+    }
+
+    public String getLastMessageTime() {
+        return lastMessageTime;
     }
 
     @Override
     public String toString() {
         return "Friend{" +
-                "friendId='" + _id + '\'' +
+                "_id='" + _id + '\'' +
+                ", username='" + username + '\'' +
                 ", firstName='" + firstName + '\'' +
-                ",lastName='" + lastName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", profilePicture='" + profilePicture + '\'' +
                 ", lastMessage='" + lastMessage + '\'' +
+                ", lastMessageTime='" + lastMessageTime + '\'' +
                 '}';
     }
 }

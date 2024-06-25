@@ -24,16 +24,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="#0A7C69"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:padding="8dp">
 
-            <com.google.android.material.tabs.TabLayout
-                android:id="@+id/tabLayout"
-                android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                app:tabIndicator="@color/white"
-                app:tabInlineLabel="true"
-                app:tabSelectedTextColor="@color/white"
-                app:tabTextColor="@color/white" />
+        <android.widget.SearchView
+            android:id="@+id/searchView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:queryHint="Search friends" />
         </LinearLayout>
     </com.google.android.material.appbar.AppBarLayout>
 

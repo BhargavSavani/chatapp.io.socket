@@ -76,7 +76,7 @@ public class LoginActivity extends AppCompatActivity {
                 .build();
 
         Request request = new Request.Builder()
-                .url("http://192.168.1.8:8000/login")
+                .url("http://192.168.1.7:8000/login")
                 .post(formBody)
                 .build();
 

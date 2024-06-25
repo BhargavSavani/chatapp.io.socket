@@ -8,11 +8,6 @@
         app:showAsAction="ifRoom"
         android:icon="@drawable/photo_camera"/>
     <item
-        android:id="@+id/ivSearch"
-        android:title="Search"
-        app:showAsAction="ifRoom"
-        android:icon="@drawable/baseline_search_24"/>
-    <item
         android:id="@+id/ivMenu"
         android:title="Menu"
         app:showAsAction="ifRoom"

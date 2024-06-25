@@ -14,5 +14,13 @@
         android:padding="10dp"
         android:textColor="@android:color/black"
         android:textSize="16sp" />
+    <ImageView
+        android:id="@+id/ivTick"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:contentDescription="Message Status"
+        android:visibility="gone"
+        android:src="@drawable/baseline_done" />
 
 </LinearLayout>

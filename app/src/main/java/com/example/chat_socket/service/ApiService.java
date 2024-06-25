@@ -1,9 +1,12 @@
 package com.example.chat_socket.service;
 
+import com.example.chat_socket.model.Friend;
 import com.example.chat_socket.model.MessageResponse;
 import com.example.chat_socket.model.User;
 import com.example.chat_socket.model.UserProfile;
 import com.example.chat_socket.model.UserProfileResponse;
+
+import java.util.List;
 
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -17,18 +20,22 @@ import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Part;
 import retrofit2.http.Path;
+import retrofit2.http.Query;
 
 public interface ApiService {
 
-    @GET("/chat")
-    Call<User> getUserDetails(@Header("Authorization") String token);
+//    @GET("/chat")
+//    Call<User> getUserDetails(@Header("Authorization") String token);
 
-    @GET("/user/lastMessage/{username}")
-    Call<MessageResponse> getLastMessage(
-            @Header("Authorization") String token,
-            @Path("username") String username
-    );
+    @GET("/user/{username}/lastmessage")
+    Call<MessageResponse> getLastMessage(@Header("Authorization") String token, @Path("username") String username);
 
+
+//    @GET("/search")
+//    Call<List<Friend>> searchFriends(
+//            @Header("Authorization") String token,
+//            @Query("query") String query
+//    );
 
     @Multipart
     @POST("/signup")

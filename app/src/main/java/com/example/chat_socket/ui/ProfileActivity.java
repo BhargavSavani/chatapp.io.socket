@@ -54,7 +54,7 @@ public class ProfileActivity extends AppCompatActivity {
 
         // Initialize Retrofit
         retrofit = new Retrofit.Builder()
-                .baseUrl("http://192.168.1.8:8000") // Replace with your base URL
+                .baseUrl("http://192.168.1.7:8000") // Replace with your base URL
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
@@ -65,7 +65,7 @@ public class ProfileActivity extends AppCompatActivity {
             String newName = nameEditText.getText().toString();
             String newAbout = aboutEditText.getText().toString();
             if (!newName.isEmpty() && !newAbout.isEmpty()) {
-//                updateUserDetails(token, newName, newAbout);
+                updateUserDetails(token, newName,newAbout);
             } else {
                 Toast.makeText(ProfileActivity.this, "Fields cannot be empty", Toast.LENGTH_SHORT).show();
             }
@@ -80,11 +80,7 @@ public class ProfileActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     UserProfile user = response.body().getUser();
                     Log.d(TAG, "onResponse: " + user);
-                    nameEditText.setText(user.getName());
-                    aboutEditText.setText(user.getAbout());
-                    phoneTextView.setText(user.getPhoneNumber());
-                    Picasso.get().load("http://192.168.1.8:8000/Assets/" + user.getProfileImage()).into(profileImageView);
-
+                    updateUIWithUserProfile(user);
                 } else {
                     Log.d(TAG, "onResponse Error: " + response.message());
                     Toast.makeText(ProfileActivity.this, "Failed to retrieve user details", Toast.LENGTH_SHORT).show();
@@ -99,28 +95,36 @@ public class ProfileActivity extends AppCompatActivity {
         });
     }
 
-//    private void updateUserDetails(String token, String name, String about) {
-//        User user = new User();
-//        user.setName(name);
-//        user.setAbout(about);
-//
-//        Call<UserProfileResponse> call = apiService.updateUserDetails(token, user);
-//        call.enqueue(new Callback<UserProfileResponse>() {
-//            @Override
-//            public void onResponse(Call<UserProfileResponse> call, Response<UserProfileResponse> response) {
-//                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-//                    Toast.makeText(ProfileActivity.this, "Profile updated", Toast.LENGTH_SHORT).show();
-//                } else {
-//                    Log.d(TAG, "onResponse Error: " + response.message());
-//                    Toast.makeText(ProfileActivity.this, "Failed to update profile", Toast.LENGTH_SHORT).show();
-//                }
-//            }
-//
-//            @Override
-//            public void onFailure(Call<UserProfileResponse> call, Throwable t) {
-//                Log.d(TAG, "onFailure: " + t.getMessage());
-//                Toast.makeText(ProfileActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-//            }
-//        });
-//    }
+    private void updateUIWithUserProfile(UserProfile userProfile) {
+        nameEditText.setText(userProfile.getName());
+        aboutEditText.setText(userProfile.getAbout());
+        phoneTextView.setText(userProfile.getPhoneNumber());
+        Picasso.get().load("http://192.168.1.7:8000/Assets/" + userProfile.getProfileImage()).into(profileImageView);
+    }
+
+    private void updateUserDetails(String token, String newName, String newAbout) {
+        UserProfile updatedUserProfile = new UserProfile();
+        updatedUserProfile.setName(newName);
+        updatedUserProfile.setAbout(newAbout);
+
+        Call<UserProfileResponse> call = apiService.updateUserDetails(token, updatedUserProfile);
+        call.enqueue(new Callback<UserProfileResponse>() {
+            @Override
+            public void onResponse(Call<UserProfileResponse> call, Response<UserProfileResponse> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    Toast.makeText(ProfileActivity.this, "Profile updated", Toast.LENGTH_SHORT).show();
+                    // Update UI with the updated profile if needed
+                } else {
+                    Log.d(TAG, "onResponse Error: " + response.message());
+                    Toast.makeText(ProfileActivity.this, "Failed to update profile", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<UserProfileResponse> call, Throwable t) {
+                Log.d(TAG, "onFailure: " + t.getMessage());
+                Toast.makeText(ProfileActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
 }
