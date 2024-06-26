@@ -90,7 +90,7 @@ public class ChatActivity extends AppCompatActivity {
 
         fetchPreviousMessages(to);
 
-        mSocket = SocketManager.getSocket();
+        mSocket = SocketManager.getInstance().getSocket();
 
         btnSend.setOnClickListener(v -> {
             String messageText = edtMessage.getText().toString().trim();
@@ -108,7 +108,6 @@ public class ChatActivity extends AppCompatActivity {
 
         apiService = retrofit.create(ApiService.class);
     }
-
 
     private void fetchLastMessageAndFinish(String username) {
         Call<MessageResponse> call = apiService.getLastMessage(token, username);

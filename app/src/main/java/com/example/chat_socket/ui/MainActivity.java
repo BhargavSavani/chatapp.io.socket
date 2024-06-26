@@ -12,6 +12,9 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
+import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.SearchView;
 import android.widget.Toast;
@@ -58,7 +61,6 @@ public class MainActivity extends AppCompatActivity {
     private String token;
     private String username;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,19 +70,6 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         searchView = findViewById(R.id.searchView);
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                searchFriends(query);
-                return false;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                searchFriends(newText);
-                return false;
-            }
-        });
 
         friendsRecyclerView = findViewById(R.id.friendsRecyclerView);
         friendsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -103,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Initialize Socket and set up listeners
         SocketManager.initializeSocket(token);
-        mSocket = SocketManager.getSocket();
+        mSocket = SocketManager.getInstance().getSocket();
 
         mSocket.on(Socket.EVENT_CONNECT, args -> runOnUiThread(() -> {
             Toast.makeText(MainActivity.this, "Connected", Toast.LENGTH_SHORT).show();
@@ -111,6 +100,7 @@ public class MainActivity extends AppCompatActivity {
         }));
 
         mSocket.on("friends list", onFriendsList);
+        mSocket.on("search result", onSearchResult);
 
         mSocket.on(Socket.EVENT_DISCONNECT, args -> runOnUiThread(() -> Toast.makeText(MainActivity.this, "Disconnected", Toast.LENGTH_SHORT).show()));
         mSocket.on(Socket.EVENT_CONNECT_ERROR, args -> {
@@ -119,6 +109,20 @@ public class MainActivity extends AppCompatActivity {
         });
 
         mSocket.connect();
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                searchFriends(query);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                filterFriends(newText);
+                return true;
+            }
+        });
     }
 
     @Override
@@ -223,40 +227,72 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        if (query.isEmpty()) {
-            filteredFriendsList.clear();
-            filteredFriendsList.addAll(friendsList);
-            friendsAdapter.notifyDataSetChanged();
-            return;
-        }
-
         JSONObject searchRequest = new JSONObject();
         try {
             searchRequest.put("token", token);
             searchRequest.put("query", query);
         } catch (JSONException e) {
-            Log.e(TAG, "Error creating search request JSON: " + e.getMessage());
-            return;
+            Log.e(TAG, "Error forming search request: " + e.getMessage());
         }
 
-        mSocket.emit("search friend", searchRequest, (Ack) args -> {
+        Log.d(TAG, "searchFriends: Sending search request: " + searchRequest.toString());
+        mSocket.emit("search friend", searchRequest);
+    }
+
+    private void filterFriends(String query) {
+        filteredFriendsList.clear();
+        if (query.isEmpty()) {
+            filteredFriendsList.addAll(friendsList);
+        } else {
+            for (Friend friend : friendsList) {
+                if (friend.getUsername().toLowerCase().contains(query.toLowerCase()) ||
+                        friend.getFirstName().toLowerCase().contains(query.toLowerCase()) ||
+                        friend.getLastName().toLowerCase().contains(query.toLowerCase())) {
+                    filteredFriendsList.add(friend);
+                }
+            }
+        }
+        friendsAdapter.notifyDataSetChanged();
+    }
+
+    private Emitter.Listener onSearchResult = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
             runOnUiThread(() -> {
                 try {
-                    JSONArray data = (JSONArray) args[0];
+                    Object data = args[0];
                     List<Friend> searchResults = new ArrayList<>();
-                    for (int i = 0; i < data.length(); i++) {
-                        JSONObject friendJson = data.getJSONObject(i);
+                    if (data instanceof JSONArray) {
+                        JSONArray jsonArray = (JSONArray) data;
+                        Log.d(TAG, "Search results received (JSONArray): " + jsonArray.toString());
+                        for (int i = 0; i < jsonArray.length(); i++) {
+                            JSONObject friendJson = jsonArray.getJSONObject(i);
+                            Friend friend = new Friend(
+                                    friendJson.getString("_id"),
+                                    friendJson.getString("username"),
+                                    friendJson.getString("firstName"),
+                                    friendJson.getString("lastName"),
+                                    friendJson.getString("profilePicture"),
+                                    friendJson.optString("lastMessage"),
+                                    friendJson.optString("lastMessageTime")
+                            );
+                            searchResults.add(friend);
+                        }
+                    } else if (data instanceof JSONObject) {
+                        JSONObject jsonObject = (JSONObject) data;
+                        Log.d(TAG, "Search results received (JSONObject): " + jsonObject.toString());
                         Friend friend = new Friend(
-                                friendJson.getString("_id"),
-                                friendJson.getString("username"),
-                                friendJson.getString("firstName"),
-                                friendJson.getString("lastName"),
-                                friendJson.getString("profilePicture"),
-                                friendJson.optString("lastMessage"),
-                                friendJson.optString("lastMessageTime")
+                                jsonObject.getString("_id"),
+                                jsonObject.getString("username"),
+                                jsonObject.getString("firstName"),
+                                jsonObject.getString("lastName"),
+                                jsonObject.getString("profilePicture"),
+                                jsonObject.optString("lastMessage"),
+                                jsonObject.optString("lastMessageTime")
                         );
                         searchResults.add(friend);
                     }
+
                     filteredFriendsList.clear();
                     if (searchResults.isEmpty()) {
                         filteredFriendsList.add(new Friend("0", "No friends found", "", "", "", "", ""));
@@ -269,16 +305,15 @@ public class MainActivity extends AppCompatActivity {
                     Log.e(TAG, "Error parsing search results: " + e.getMessage());
                 }
             });
-        });
-    }
+        }
+    };
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (mSocket != null) {
-            mSocket.disconnect();
-            mSocket.off("friends list", onFriendsList);
-        }
+        mSocket.off("friends list", onFriendsList);
+        mSocket.off("search result", onSearchResult);
+        mSocket.disconnect();
     }
 }
 
