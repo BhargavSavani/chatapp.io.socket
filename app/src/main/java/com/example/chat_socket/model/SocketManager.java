@@ -13,7 +13,7 @@ public class SocketManager {
         try {
             IO.Options opts = new IO.Options();
             opts.query = "token=" + token;
-            mSocket = IO.socket("http://192.168.1.7:8000", opts);
+            mSocket = IO.socket("http://192.168.1.8:8000", opts);
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }

@@ -54,7 +54,7 @@ public class ProfileActivity extends AppCompatActivity {
 
         // Initialize Retrofit
         retrofit = new Retrofit.Builder()
-                .baseUrl("http://192.168.1.7:8000") // Replace with your base URL
+                .baseUrl("http://192.168.1.8:8000") // Replace with your base URL
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
@@ -99,7 +99,7 @@ public class ProfileActivity extends AppCompatActivity {
         nameEditText.setText(userProfile.getName());
         aboutEditText.setText(userProfile.getAbout());
         phoneTextView.setText(userProfile.getPhoneNumber());
-        Picasso.get().load("http://192.168.1.7:8000/Assets/" + userProfile.getProfileImage()).into(profileImageView);
+        Picasso.get().load("http://192.168.1.8:8000/Assets/" + userProfile.getProfileImage()).into(profileImageView);
     }
 
     private void updateUserDetails(String token, String newName, String newAbout) {

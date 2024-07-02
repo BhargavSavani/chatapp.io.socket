@@ -42,7 +42,6 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
     @Override
     public MessageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view;
-
         Log.d(TAG, "onCreateViewHolder: viewType=" + viewType);
 
         if (viewType == 1) {

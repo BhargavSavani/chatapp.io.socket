@@ -8,6 +8,9 @@ public class Friend {
     private String profilePicture;
     private String lastMessage;
     private String lastMessageTime;
+    private String groupName;
+    private String groupDescription;
+    private String groupIcon;
 
     public Friend(String _id, String username, String firstName, String lastName, String profilePicture, String lastMessage, String lastMessageTime) {
         this._id = _id;
@@ -17,7 +20,16 @@ public class Friend {
         this.profilePicture = profilePicture;
         this.lastMessage = lastMessage;
         this.lastMessageTime = lastMessageTime;
+
     }
+
+    public Friend(String _id, String groupName, String groupDescription, String groupIcon) {
+        this._id = _id;
+        this.groupName = groupName;
+        this.groupDescription = groupDescription;
+        this.groupIcon = groupIcon;
+    }
+
 
     public String getId() {
         return _id;
@@ -47,6 +59,22 @@ public class Friend {
         return lastMessageTime;
     }
 
+    public String get_id() {
+        return _id;
+    }
+
+    public String getGroupName() {
+        return groupName;
+    }
+
+    public String getGroupDescription() {
+        return groupDescription;
+    }
+
+    public String getGroupIcon() {
+        return groupIcon;
+    }
+
     @Override
     public String toString() {
         return "Friend{" +
@@ -57,6 +85,9 @@ public class Friend {
                 ", profilePicture='" + profilePicture + '\'' +
                 ", lastMessage='" + lastMessage + '\'' +
                 ", lastMessageTime='" + lastMessageTime + '\'' +
+                ", groupName='" + groupName + '\'' +
+                ", groupDescription='" + groupDescription + '\'' +
+                ", groupIcon='" + groupIcon + '\'' +
                 '}';
     }
 }
