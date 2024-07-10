@@ -45,7 +45,6 @@ import androidx.activity.EdgeToEdge;
 
 public class SignupActivity extends AppCompatActivity {
 
-
     private EditText edtFName, edtLName, edtPNumber, edtEmail, edtPassword;
     private Button signupButton;
     private static final int GALLERY_REQUEST_CODE = 100;

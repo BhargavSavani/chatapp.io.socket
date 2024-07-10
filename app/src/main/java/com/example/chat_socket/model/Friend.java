@@ -1,5 +1,7 @@
 package com.example.chat_socket.model;
 
+import java.util.Date;
+
 public class Friend {
     private String _id;
     private String username;
@@ -7,12 +9,12 @@ public class Friend {
     private String lastName;
     private String profilePicture;
     private String lastMessage;
-    private String lastMessageTime;
+    private Date lastMessageTime;
     private String groupName;
     private String groupDescription;
     private String groupIcon;
 
-    public Friend(String _id, String username, String firstName, String lastName, String profilePicture, String lastMessage, String lastMessageTime) {
+    public Friend(String _id, String username, String firstName, String lastName, String profilePicture, String lastMessage, Date lastMessageTime) {
         this._id = _id;
         this.username = username;
         this.firstName = firstName;
@@ -29,7 +31,6 @@ public class Friend {
         this.groupDescription = groupDescription;
         this.groupIcon = groupIcon;
     }
-
 
     public String getId() {
         return _id;
@@ -55,7 +56,7 @@ public class Friend {
         return lastMessage;
     }
 
-    public String getLastMessageTime() {
+    public Date getLastMessageTime() {
         return lastMessageTime;
     }
 
@@ -84,7 +85,7 @@ public class Friend {
                 ", lastName='" + lastName + '\'' +
                 ", profilePicture='" + profilePicture + '\'' +
                 ", lastMessage='" + lastMessage + '\'' +
-                ", lastMessageTime='" + lastMessageTime + '\'' +
+                ", lastMessageTime=" + lastMessageTime +
                 ", groupName='" + groupName + '\'' +
                 ", groupDescription='" + groupDescription + '\'' +
                 ", groupIcon='" + groupIcon + '\'' +

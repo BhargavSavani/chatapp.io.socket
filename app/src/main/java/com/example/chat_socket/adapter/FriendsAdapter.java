@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.chat_socket.R;
 import com.example.chat_socket.model.Friend;
+import com.example.chat_socket.model.Utils;
 import com.example.chat_socket.ui.ChatActivity;
 
 import java.util.List;
@@ -78,6 +79,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
         public FriendViewHolder(@NonNull View itemView) {
             super(itemView);
+
             tvFullName = itemView.findViewById(R.id.tvFullName);
             profileImageView = itemView.findViewById(R.id.profile_image);
             lastMessageTextView = itemView.findViewById(R.id.lastMessageTextView);
@@ -89,7 +91,8 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
             if (friend.getLastMessage() != null) {
                 lastMessageTextView.setText(friend.getLastMessage());
-                lastMessageTimeTextView.setText((friend.getLastMessageTime()));
+                lastMessageTimeTextView.setText(Utils.formatTimeToWhatsAppStyle(friend.getLastMessageTime()));
+
             } else {
                 lastMessageTextView.setText("No messages yet");
                 lastMessageTimeTextView.setText("");
@@ -97,7 +100,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
             // Use Glide to load profile pictures
             Glide.with(context)
-                    .load("http://192.168.1.8:8000/Assets/" + friend.getProfilePicture())
+                    .load("http://192.168.1.7:8000/Assets/" + friend.getProfilePicture())
                     .placeholder(R.drawable.profile)
                     .into(profileImageView);
 
@@ -130,18 +133,19 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
             // Load group icon using Glide
             Glide.with(context)
-                    .load("http://192.168.1.8:8000/Assets/" + group.getGroupIcon())
+                    .load("http://192.168.1.7:8000/Assets/" + group.getGroupIcon())
                     .placeholder(R.drawable.profile)
                     .into(groupIconImageView);
 
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                   Intent intent = new Intent(context, ChatActivity.class);
+                    Intent intent = new Intent(context, ChatActivity.class);
                     intent.putExtra("image", group.getGroupIcon());
                     intent.putExtra("name", group.getGroupName());
                     intent.putExtra("to", group.getId());
-                    context.startActivity(intent);                }
+                    context.startActivity(intent);
+                }
             });
         }
     }

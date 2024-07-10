@@ -75,11 +75,10 @@ public class ChatActivity extends AppCompatActivity {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         token = preferences.getString("token", null);
         userId = preferences.getString("userId", null);
-
         Log.d(TAG, "Current Username: " + userId);
 
         usernameTextView.setText(name);
-        Picasso.get().load("http://192.168.1.8:8000/Assets/" + image).into(profileImageView);
+        Picasso.get().load("http://192.168.1.7:8000/Assets/" + image).into(profileImageView);
 
         ivBack.setOnClickListener(v -> fetchLastMessageAndFinish(to));
 
@@ -91,6 +90,7 @@ public class ChatActivity extends AppCompatActivity {
         fetchPreviousMessages(to);
 
         mSocket = SocketManager.getInstance().getSocket();
+        mSocket.on("messageRead", onMessageRead);
 
         btnSend.setOnClickListener(v -> {
             String messageText = edtMessage.getText().toString().trim();
@@ -102,11 +102,37 @@ public class ChatActivity extends AppCompatActivity {
         });
 
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://192.168.1.8:8000/")
+                .baseUrl("http://192.168.1.7:8000/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
         apiService = retrofit.create(ApiService.class);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        sendReadReceipt(); // Send "read receipt" event when the chat panel is opened
+    }
+
+    private void sendReadReceipt() {
+        List<String> unreadMessageIds = new ArrayList<>();
+        for (Message message : messageList) {
+            if (!message.isRead() && !message.getSenderId().equals(userId)) {
+                unreadMessageIds.add(message.get_id());
+            }
+        }
+
+        if (!unreadMessageIds.isEmpty()) {
+            JSONObject readReceiptObject = new JSONObject();
+            try {
+                readReceiptObject.put("messageIds", new JSONArray(unreadMessageIds));
+                readReceiptObject.put("receiverId", userId);
+                mSocket.emit("readReceipt", readReceiptObject);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void fetchLastMessageAndFinish(String username) {
@@ -137,7 +163,7 @@ public class ChatActivity extends AppCompatActivity {
     private void fetchPreviousMessages(String user) {
         AsyncTask.execute(() -> {
             try {
-                URL url = new URL("http://192.168.1.8:8000/messages?user=" + user);
+                URL url = new URL("http://192.168.1.7:8000/messages?user=" + user);
                 Log.d(TAG, "fetchPreviousMessages: " + user);
                 HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setRequestMethod("GET");
@@ -161,8 +187,9 @@ public class ChatActivity extends AppCompatActivity {
                         JSONObject messageObject = messagesArray.getJSONObject(i);
                         String messageText = messageObject.getString("message");
                         String senderId = messageObject.getString("senderId");
+                        boolean isRead = messageObject.getBoolean("isRead");
                         Log.d(TAG, "fetchPreviousMessages: " + senderId);
-                        Message message = new Message(senderId, messageText);
+                        Message message = new Message(senderId, messageText, isRead);
                         fetchedMessages.add(message);
                     }
 
@@ -184,7 +211,7 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void sendMessage(String to, String messageText, String token) {
-        Message message = new Message(userId, messageText);
+        Message message = new Message(userId, messageText, false);
         messageAdapter.addMessage(message);
 
         JSONObject messageObject = new JSONObject();
@@ -200,22 +227,30 @@ public class ChatActivity extends AppCompatActivity {
         mSocket.emit("message", messageObject);
     }
 
-    private Emitter.Listener onNewMessage = new Emitter.Listener() {
+    private Emitter.Listener onMessageRead = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
             runOnUiThread(() -> {
                 try {
                     JSONObject data = (JSONObject) args[0];
-                    String messageText = data.getString("message");
-                    String senderId = data.getString("userId");
-                    Message message = new Message(senderId, messageText);
-                    messageAdapter.addMessage(message);
-                    chatRecyclerView.scrollToPosition(messageList.size() - 1);
+                    JSONArray messageIds = data.getJSONArray("messageIds");
+                    for (int i = 0; i < messageIds.length(); i++) {
+                        String messageId = messageIds.getString(i);
+                        messageAdapter.updateMessageReadStatus(messageId, true);
+                    }
                 } catch (JSONException e) {
                     e.printStackTrace();
-                    Toast.makeText(ChatActivity.this, "Error receiving message", Toast.LENGTH_LONG).show();
+                    Toast.makeText(ChatActivity.this, "Error updating message read status", Toast.LENGTH_LONG).show();
                 }
             });
         }
     };
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mSocket != null) {
+            mSocket.off("messageRead", onMessageRead);
+        }
+    }
 }

@@ -1,10 +1,10 @@
 package com.example.chat_socket.ui;
 
-import static android.net.http.SslCertificate.saveState;
-
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -38,11 +38,19 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
 import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
+import io.socket.engineio.parser.Base64;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -156,6 +164,7 @@ public class MainActivity extends AppCompatActivity {
         dialog.show();
     }
 
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -164,6 +173,7 @@ public class MainActivity extends AppCompatActivity {
             imageGroupIcon.setImageURI(groupIconUri);
         }
     }
+
 
     private void createGroup(String groupName, String groupDescription, Uri groupIconUri) {
         if (groupName.isEmpty()) {
@@ -178,8 +188,8 @@ public class MainActivity extends AppCompatActivity {
             groupObject.put("username", username); // Assuming you want to include the username in the group creation request
 
             if (groupIconUri != null) {
-                String imagePath = getPathFromUri(groupIconUri);
-                groupObject.put("groupIcon", imagePath);
+                String base64Image = convertImageUriToBase64(groupIconUri);
+                groupObject.put("groupIcon", base64Image);
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -188,17 +198,19 @@ public class MainActivity extends AppCompatActivity {
         mSocket.emit("create group", groupObject);
     }
 
-    private String getPathFromUri(Uri uri) {
-        String[] projection = {MediaStore.Images.Media.DATA};
-        Cursor cursor = getContentResolver().query(uri, projection, null, null, null);
-        if (cursor != null) {
-            int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-            cursor.moveToFirst();
-            String path = cursor.getString(columnIndex);
-            cursor.close();
-            return path;
+
+    private String convertImageUriToBase64(Uri imageUri) {
+        try {
+            InputStream inputStream = getContentResolver().openInputStream(imageUri);
+            Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
+            byte[] byteArray = byteArrayOutputStream.toByteArray();
+            return Base64.encodeToString(byteArray, Base64.DEFAULT);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
-        return null;
     }
 
     @Override
@@ -282,6 +294,14 @@ public class MainActivity extends AppCompatActivity {
                     friendsList.clear();
                     for (int i = 0; i < friendsData.length(); i++) {
                         JSONObject friendJson = friendsData.getJSONObject(i);
+
+                        String lastMessageTimeStr = friendJson.optString("lastMessageTime");
+
+                        // Convert the lastMessageTime to a Date object
+                        Date lastMessageTime = null;
+                        if (!lastMessageTimeStr.isEmpty()) {
+                            lastMessageTime = parseUTCDateToIST(lastMessageTimeStr);
+                        }
                         Friend friend = new Friend(
                                 friendJson.getString("_id"),
                                 friendJson.getString("username"),
@@ -289,7 +309,7 @@ public class MainActivity extends AppCompatActivity {
                                 friendJson.getString("lastName"),
                                 friendJson.getString("profilePicture"),
                                 friendJson.optString("lastMessage"),
-                                friendJson.optString("lastMessageTime")
+                                lastMessageTime
                         );
                         friendsList.add(friend);
                     }
@@ -312,6 +332,18 @@ public class MainActivity extends AppCompatActivity {
             });
         }
     };
+
+    private Date parseUTCDateToIST(String utcDateString) {
+        SimpleDateFormat inputDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault());
+        inputDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        try {
+            Date date = inputDateFormat.parse(utcDateString);
+            return date;
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
     private void searchFriends(String query) {
         if (token == null) {
@@ -365,7 +397,12 @@ public class MainActivity extends AppCompatActivity {
                         Log.d(TAG, "Search results received (JSONArray): " + jsonArray.toString());
                         for (int i = 0; i < jsonArray.length(); i++) {
                             JSONObject friendJson = jsonArray.getJSONObject(i);
+
                             if (friendJson.has("username")) { // Check if it is a friend
+                                Date lastMessageTime = null;
+                                if (friendJson.has("lastMessageTime")) {
+                                    lastMessageTime = parseUTCDateToIST(friendJson.getString("lastMessageTime"));
+                                }
                                 Friend friend = new Friend(
                                         friendJson.getString("_id"),
                                         friendJson.optString("username"),
@@ -373,7 +410,7 @@ public class MainActivity extends AppCompatActivity {
                                         friendJson.optString("lastName"),
                                         friendJson.optString("profilePicture"),
                                         friendJson.optString("lastMessage"),
-                                        friendJson.optString("lastMessageTime")
+                                        lastMessageTime
                                 );
                                 searchResults.add(friend);
                             } else { // Assume it's a group if there's no username
@@ -390,6 +427,10 @@ public class MainActivity extends AppCompatActivity {
                         JSONObject jsonObject = (JSONObject) data;
                         Log.d(TAG, "Search results received (JSONObject): " + jsonObject.toString());
                         if (jsonObject.has("username")) { // Check if it is a friend
+                            Date lastMessageTime = null;
+                            if (jsonObject.has("lastMessageTime")) {
+                                lastMessageTime = parseUTCDateToIST(jsonObject.getString("lastMessageTime"));
+                            }
                             Friend friend = new Friend(
                                     jsonObject.getString("_id"),
                                     jsonObject.optString("username"),
@@ -397,7 +438,7 @@ public class MainActivity extends AppCompatActivity {
                                     jsonObject.optString("lastName"),
                                     jsonObject.optString("profilePicture"),
                                     jsonObject.optString("lastMessage"),
-                                    jsonObject.optString("lastMessageTime")
+                                    lastMessageTime
                             );
                             searchResults.add(friend);
                         } else { // Assume it's a group if there's no username
@@ -420,12 +461,11 @@ public class MainActivity extends AppCompatActivity {
                     friendsAdapter.notifyDataSetChanged();
 
                 } catch (JSONException e) {
-                    Log.e(TAG, "Error parsing search results: " + e.getMessage());
+                     Log.e(TAG, "Error parsing search results: " + e.getMessage());
                 }
             });
         }
     };
-
 
     private Emitter.Listener onGroupCreateSuccess = new Emitter.Listener() {
         @Override
